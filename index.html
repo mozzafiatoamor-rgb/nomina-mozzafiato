@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0f1a">
+<title>Panel de Nómina</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0f1a;--card:#141d2b;--card2:#1a2538;--card3:#1f2e44;--accent:#00b894;--accent2:#00cca3;--danger:#e74c3c;--warning:#f39c12;--info:#3498db;--text:#e8e8e8;--text2:#8899aa;--text3:#556677;--radius:16px;--radius-sm:10px;--shadow:0 4px 24px rgba(0,0,0,.4)}
+html,body{height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);max-width:480px;margin:0 auto;position:relative;height:100dvh;overflow:hidden}
+/* SCREENS */
+.screen{display:none;flex-direction:column;height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.screen.active{display:flex}
+.screen-content{flex:1;padding:16px;padding-bottom:100px}
+/* TOP BAR */
+.topbar{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--card);position:sticky;top:0;z-index:50}
+.topbar h2{font-size:1rem;flex:1;font-weight:600}
+.topbar-btn{background:none;border:none;color:var(--text2);cursor:pointer;padding:6px;border-radius:8px}
+.topbar-btn:active{background:var(--card2)}
+.topbar-btn svg{width:22px;height:22px;display:block}
+/* LOGIN */
+.login-container{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100dvh;padding:24px}
+.login-logo{font-size:2rem;font-weight:700;color:var(--accent);margin-bottom:8px}
+.login-sub{font-size:.85rem;color:var(--text2);margin-bottom:32px}
+.login-field{width:100%;max-width:300px;margin-bottom:12px}
+.login-field label{display:block;font-size:.75rem;color:var(--text2);margin-bottom:4px}
+.login-field input{width:100%;padding:12px;background:var(--card);border:1px solid var(--card2);border-radius:var(--radius-sm);color:var(--text);font-size:.9rem;outline:none}
+.login-field input:focus{border-color:var(--accent)}
+.btn-login{width:100%;max-width:300px;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:.95rem;font-weight:600;cursor:pointer;margin-top:8px}
+.btn-login:active{opacity:.9}
+.login-error{color:var(--danger);font-size:.8rem;margin-top:8px;text-align:center;min-height:20px}
+/* NAV DRAWER */
+.nav-handle{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:60px;height:20px;background:var(--text3);border-radius:3px 3px 0 0;z-index:500;cursor:pointer}
+.nav-drawer{position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;background:var(--card);border-radius:var(--radius) var(--radius) 0 0;padding:16px;transform:translateY(100%);transition:transform .3s ease;z-index:600;max-height:70dvh;overflow-y:auto}
+.nav-drawer.open{transform:translateY(0)}
+.nav-backdrop{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:550;display:none}
+.nav-backdrop.open{display:block}
+.nav-item{display:flex;align-items:center;gap:12px;padding:14px;border-radius:var(--radius-sm);cursor:pointer;transition:background .15s;-webkit-tap-highlight-color:transparent}
+.nav-item:active,.nav-item.active{background:var(--card2)}
+.nav-item svg{width:20px;height:20px;color:var(--accent);flex-shrink:0}
+.nav-item span{font-size:.85rem}
+.nav-divider{height:1px;background:var(--card2);margin:8px 0}
+/* CARDS */
+.card{background:var(--card);border-radius:var(--radius-sm);padding:16px;margin-bottom:10px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.card-title{font-size:.9rem;font-weight:600}
+.card-subtitle{font-size:.75rem;color:var(--text2)}
+.card-badge{font-size:.65rem;padding:3px 10px;border-radius:12px;font-weight:600}
+.badge-green{background:rgba(0,184,148,.15);color:var(--accent)}
+.badge-red{background:rgba(231,76,60,.15);color:var(--danger)}
+.badge-yellow{background:rgba(243,156,18,.15);color:var(--warning)}
+.badge-blue{background:rgba(52,152,219,.15);color:var(--info)}
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.stat-card{background:var(--card);border-radius:var(--radius-sm);padding:14px;text-align:center}
+.stat-value{font-size:1.5rem;font-weight:700;color:var(--accent)}
+.stat-label{font-size:.7rem;color:var(--text2);margin-top:2px}
+.stat-value.red{color:var(--danger)}
+.stat-value.yellow{color:var(--warning)}
+/* FORMS */
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:.75rem;color:var(--text2);margin-bottom:4px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--card2);border-radius:var(--radius-sm);color:var(--text);font-size:.85rem;outline:none}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent)}
+.form-group textarea{resize:vertical;min-height:60px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* BUTTONS */
+.btn{padding:12px 16px;border:none;border-radius:var(--radius-sm);font-size:.85rem;font-weight:600;cursor:pointer;text-align:center;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
+.btn:active{opacity:.85}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-secondary{background:var(--card2);color:var(--text)}
+.btn-warning{background:var(--warning);color:#000}
+.btn-outline{background:transparent;border:1px solid var(--accent);color:var(--accent)}
+.btn-sm{padding:8px 12px;font-size:.75rem}
+.btn-block{width:100%}
+.btn-row{display:flex;gap:8px;margin-top:12px}
+.btn-row .btn{flex:1}
+/* TABS */
+.tabs{display:flex;gap:4px;padding:0 16px;margin-bottom:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:8px 14px;font-size:.75rem;font-weight:600;border:none;border-radius:20px;cursor:pointer;white-space:nowrap;background:var(--card);color:var(--text2);transition:all .2s;-webkit-tap-highlight-color:transparent}
+.tab.active{background:var(--accent);color:#fff}
+/* FILTER BAR */
+.filter-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.filter-bar select,.filter-bar input{padding:8px 12px;background:var(--card);border:1px solid var(--card2);border-radius:var(--radius-sm);color:var(--text);font-size:.8rem;outline:none;flex:1;min-width:0}
+/* TABLE-LIKE */
+.list-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--card);border-radius:var(--radius-sm);margin-bottom:8px;cursor:pointer;transition:background .15s}
+.list-item:active{background:var(--card2)}
+.list-item .avatar{width:40px;height:40px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--accent);font-weight:700;flex-shrink:0;border:2px solid var(--accent);overflow:hidden}
+.list-item .avatar img{width:100%;height:100%;object-fit:cover}
+.list-item .info{flex:1;min-width:0}
+.list-item .info h4{font-size:.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list-item .info p{font-size:.7rem;color:var(--text2)}
+.list-item .amount{font-size:.9rem;font-weight:700;color:var(--accent);white-space:nowrap}
+.list-item .amount.red{color:var(--danger)}
+/* ATTENDANCE CARD */
+.att-card{background:var(--card);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px}
+.att-card-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.att-card-header .att-photo{width:48px;height:48px;border-radius:50%;overflow:hidden;border:2px solid var(--card2);flex-shrink:0;background:var(--card2);display:flex;align-items:center;justify-content:center}
+.att-card-header .att-photo img{width:100%;height:100%;object-fit:cover}
+.att-card-header .att-info{flex:1}
+.att-card-header .att-info h4{font-size:.85rem;font-weight:600}
+.att-card-header .att-info p{font-size:.7rem;color:var(--text2)}
+.att-times{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.att-time{background:var(--card2);border-radius:6px;padding:6px 8px;text-align:center}
+.att-time .att-label{font-size:.6rem;color:var(--text3);text-transform:uppercase}
+.att-time .att-value{font-size:.85rem;font-weight:600}
+.att-badges{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+/* OVERLAY */
+.overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,15,26,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .3s}
+.overlay.active{opacity:1;pointer-events:auto}
+.spinner{width:48px;height:48px;border:3px solid var(--card2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.overlay h2{font-size:1.1rem;margin-bottom:4px;text-align:center;padding:0 20px}
+.overlay p{font-size:.8rem;color:var(--text2);text-align:center;padding:0 20px}
+/* MODAL */
+.modal{position:fixed;top:0;left:0;right:0;bottom:0;z-index:800;display:none}
+.modal.active{display:flex;flex-direction:column}
+.modal-backdrop{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5)}
+.modal-content{position:relative;background:var(--bg);max-width:480px;width:100%;margin:auto;border-radius:var(--radius) var(--radius) 0 0;padding:20px 16px;max-height:90dvh;overflow-y:auto;z-index:1;margin-top:auto}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.modal-header h3{font-size:1rem;font-weight:600}
+.modal-close{background:none;border:none;color:var(--text2);cursor:pointer;padding:4px}
+.modal-close svg{width:22px;height:22px}
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3)}
+.empty-state svg{width:48px;height:48px;margin-bottom:12px;opacity:.5}
+.empty-state p{font-size:.85rem}
+/* SUCURSAL SELECTOR */
+.suc-selector{display:flex;gap:8px;padding:0 16px;margin-bottom:12px}
+.suc-btn{padding:8px 16px;font-size:.8rem;font-weight:600;border:2px solid var(--card2);border-radius:20px;background:transparent;color:var(--text2);cursor:pointer;transition:all .2s}
+.suc-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,184,148,.08)}
+/* OFFLINE BADGE */
+.offline-badge{position:fixed;top:8px;right:8px;background:var(--warning);color:#000;font-size:.65rem;font-weight:700;padding:4px 10px;border-radius:12px;z-index:900;display:none}
+.offline-badge.show{display:block}
+</style>
+</head>
+<body>
+
+<div class="offline-badge" id="offlineBadge">SIN CONEXIÓN</div>
+
+<!-- ========== LOGIN ========== -->
+<div class="screen active" id="screenLogin">
+  <div class="login-container">
+    <div class="login-logo">Nómina</div>
+    <div class="login-sub">Panel de Administración</div>
+    <div class="login-field">
+      <label>Usuario</label>
+      <input type="text" id="loginUser" placeholder="admin" autocomplete="off">
+    </div>
+    <div class="login-field">
+      <label>PIN</label>
+      <input type="password" id="loginPin" placeholder="••••••" maxlength="6" inputmode="numeric" autocomplete="off">
+    </div>
+    <button class="btn-login" data-action="doLogin">Ingresar</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ========== DASHBOARD ========== -->
+<div class="screen" id="screenDashboard">
+  <div class="topbar">
+    <h2>Dashboard</h2>
+    <button class="topbar-btn" data-action="refreshDashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+    </button>
+  </div>
+  <div class="suc-selector" id="sucSelector"></div>
+  <div class="screen-content">
+    <div class="stats-grid" id="dashStats"></div>
+    <h3 style="font-size:.85rem;margin-bottom:10px;color:var(--text2)">Registros de hoy</h3>
+    <div id="dashTodayList"></div>
+  </div>
+</div>
+
+<!-- ========== EMPLEADOS ========== -->
+<div class="screen" id="screenEmpleados">
+  <div class="topbar">
+    <h2>Empleados</h2>
+    <button class="topbar-btn" data-action="openAddEmpleado">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </div>
+  <div class="suc-selector" id="sucSelectorEmp"></div>
+  <div class="screen-content">
+    <div class="filter-bar">
+      <input type="text" id="empSearchInput" placeholder="Buscar empleado..." autocomplete="off">
+    </div>
+    <div id="empList"></div>
+  </div>
+</div>
+
+<!-- ========== ASISTENCIA ========== -->
+<div class="screen" id="screenAsistencia">
+  <div class="topbar">
+    <h2>Asistencia</h2>
+    <button class="topbar-btn" data-action="addAsistenciaManual">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </div>
+  <div class="suc-selector" id="sucSelectorAtt"></div>
+  <div class="screen-content">
+    <div class="filter-bar">
+      <input type="date" id="attDateFilter">
+    </div>
+    <div id="attList"></div>
+  </div>
+</div>
+
+<!-- ========== NÓMINA ========== -->
+<div class="screen" id="screenNomina">
+  <div class="topbar">
+    <h2>Nómina</h2>
+  </div>
+  <div class="suc-selector" id="sucSelectorNom"></div>
+  <div class="screen-content">
+    <div class="card">
+      <div class="card-title" style="margin-bottom:10px">Calcular Nómina Semanal</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Inicio (Martes)</label>
+          <input type="date" id="nomInicio">
+        </div>
+        <div class="form-group">
+          <label>Fin (Domingo)</label>
+          <input type="date" id="nomFin">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" data-action="calcularNomina">Calcular</button>
+        <button class="btn btn-warning" data-action="cerrarNomina">Cerrar Periodo</button>
+      </div>
+    </div>
+    <div id="nomResults"></div>
+    <h3 style="font-size:.85rem;margin:16px 0 10px;color:var(--text2)">Historial de Periodos</h3>
+    <div id="nomHistorial"></div>
+  </div>
+</div>
+
+<!-- ========== PRÉSTAMOS ========== -->
+<div class="screen" id="screenPrestamos">
+  <div class="topbar">
+    <h2>Préstamos y Adelantos</h2>
+    <button class="topbar-btn" data-action="openAddPrestamo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </div>
+  <div class="screen-content">
+    <div class="tabs" id="prestamosTabs">
+      <button class="tab active" data-tab="activos">Activos</button>
+      <button class="tab" data-tab="historial">Historial</button>
+    </div>
+    <div id="prestamosList"></div>
+  </div>
+</div>
+
+<!-- ========== DEDUCCIONES ========== -->
+<div class="screen" id="screenDeducciones">
+  <div class="topbar">
+    <h2>Deducciones</h2>
+    <button class="topbar-btn" data-action="openAddDeduccion">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </div>
+  <div class="screen-content">
+    <div class="filter-bar">
+      <select id="dedTipoFilter">
+        <option value="">Todos los tipos</option>
+        <option value="comida">Comidas</option>
+        <option value="adelanto">Adelantos</option>
+        <option value="otro">Otros</option>
+      </select>
+    </div>
+    <div id="dedList"></div>
+  </div>
+</div>
+
+<!-- ========== REPORTES ========== -->
+<div class="screen" id="screenReportes">
+  <div class="topbar">
+    <h2>Reportes</h2>
+  </div>
+  <div class="suc-selector" id="sucSelectorRep"></div>
+  <div class="screen-content">
+    <div class="card" data-action="openReporteAsistencia" style="cursor:pointer">
+      <div style="display:flex;align-items:center;gap:12px">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <div><div class="card-title">Asistencia Semanal</div><div class="card-subtitle">Reporte detallado por empleado</div></div>
+      </div>
+    </div>
+    <div class="card" data-action="openReporteNomina" style="cursor:pointer">
+      <div style="display:flex;align-items:center;gap:12px">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <div><div class="card-title">Nómina por Periodo</div><div class="card-subtitle">Desglose de pagos y deducciones</div></div>
+      </div>
+    </div>
+    <div class="card" data-action="openReporteCostoTurnos" style="cursor:pointer">
+      <div style="display:flex;align-items:center;gap:12px">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+        <div><div class="card-title">Costo por Turnos</div><div class="card-subtitle">Análisis de costo de nómina por turno</div></div>
+      </div>
+    </div>
+    <div class="card" data-action="openReporteEmpleado" style="cursor:pointer">
+      <div style="display:flex;align-items:center;gap:12px">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <div><div class="card-title">Reporte por Empleado</div><div class="card-subtitle">Historial individual completo</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== AJUSTES ========== -->
+<div class="screen" id="screenAjustes">
+  <div class="topbar">
+    <h2>Ajustes</h2>
+  </div>
+  <div class="screen-content">
+    <div class="card">
+      <div class="card-title" style="margin-bottom:10px">Servidor</div>
+      <div class="form-group">
+        <label>URL del Apps Script</label>
+        <input type="url" id="settingsApiUrl" placeholder="https://script.google.com/...">
+      </div>
+      <button class="btn btn-primary btn-block" data-action="saveSettings">Guardar</button>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:10px">Sucursales</div>
+      <div id="settingsSucursalList"></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:10px">Sistema</div>
+      <button class="btn btn-outline btn-block" data-action="initSystem" style="margin-bottom:8px">Inicializar Sistema</button>
+      <button class="btn btn-outline btn-block" data-action="limpiarFotos" style="margin-bottom:8px">Limpiar Fotos Antiguas</button>
+      <button class="btn btn-danger btn-block" data-action="doLogout">Cerrar Sesión</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== NAV DRAWER ========== -->
+<div class="nav-backdrop" id="navBackdrop"></div>
+<button id="navBtn" style="position:fixed;bottom:16px;right:16px;width:48px;height:48px;border-radius:50%;background:var(--accent);border:none;color:#fff;display:flex;align-items:center;justify-content:center;z-index:400;cursor:pointer;box-shadow:0 4px 12px rgba(0,184,148,.3)">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+<div class="nav-handle" id="navHandle"></div>
+<div class="nav-drawer" id="navDrawer">
+  <div class="nav-item" data-nav="screenDashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    <span>Dashboard</span>
+  </div>
+  <div class="nav-item" data-nav="screenEmpleados">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    <span>Empleados</span>
+  </div>
+  <div class="nav-item" data-nav="screenAsistencia">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <span>Asistencia</span>
+  </div>
+  <div class="nav-item" data-nav="screenNomina">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+    <span>Nómina</span>
+  </div>
+  <div class="nav-item" data-nav="screenPrestamos">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <span>Préstamos</span>
+  </div>
+  <div class="nav-item" data-nav="screenDeducciones">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <span>Deducciones</span>
+  </div>
+  <div class="nav-divider"></div>
+  <div class="nav-item" data-nav="screenReportes">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+    <span>Reportes</span>
+  </div>
+  <div class="nav-item" data-nav="screenAjustes">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.32 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    <span>Ajustes</span>
+  </div>
+</div>
+
+<!-- ========== MODALS ========== -->
+<div class="modal" id="modalEmpleado">
+  <div class="modal-backdrop" data-action="closeModal"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modalEmpTitle">Nuevo Empleado</h3>
+      <button class="modal-close" data-action="closeModal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <input type="hidden" id="empEditId">
+    <div class="form-group"><label>Nombre completo</label><input type="text" id="empNombre" autocomplete="off"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Teléfono</label><input type="tel" id="empTelefono"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="empEmail"></div>
+    </div>
+    <div class="form-group"><label>Puesto</label><select id="empPuesto">
+      <option value="">Seleccionar...</option>
+      <optgroup label="Mozzafiato">
+        <option>Barista</option><option>Mesero</option><option>Ayudante de mesero</option>
+        <option>Cocinero encargado de turno</option><option>Encargado de cocina</option>
+        <option>Ayudante de cocina</option><option>Lavaloza</option>
+      </optgroup>
+      <optgroup label="Hotel Casa Regina">
+        <option>Recepcionista</option><option>Camarista</option><option>Mantenimiento</option>
+        <option>Botones</option><option>Limpieza</option><option>Seguridad</option>
+        <option>Cocinero</option><option>Mesero Hotel</option>
+      </optgroup>
+    </select></div>
+    <div class="form-row">
+      <div class="form-group"><label>Turno</label><select id="empTurno">
+        <option value="">Seleccionar...</option>
+        <option>Matutino</option><option>Vespertino</option><option>Quebrado</option>
+      </select></div>
+      <div class="form-group"><label>Sucursal</label><select id="empSucursal"></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Salario Semanal ($)</label><input type="number" id="empSalario" step="0.01"></div>
+      <div class="form-group"><label>PIN (6 dígitos)</label><input type="text" id="empPin" maxlength="6" inputmode="numeric"></div>
+    </div>
+    <div class="form-group"><label>Fecha de Ingreso</label><input type="date" id="empFechaIngreso"></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" data-action="closeModal">Cancelar</button>
+      <button class="btn btn-primary" data-action="saveEmpleado">Guardar</button>
+    </div>
+    <div id="empEditActions" style="display:none;margin-top:12px">
+      <button class="btn btn-danger btn-block btn-sm" data-action="deleteEmpleado">Desactivar Empleado</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modalPrestamo">
+  <div class="modal-backdrop" data-action="closeModal"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Nuevo Préstamo / Adelanto</h3>
+      <button class="modal-close" data-action="closeModal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="form-group"><label>Empleado</label><select id="prestEmp"></select></div>
+    <div class="form-group"><label>Tipo</label><select id="prestTipo">
+      <option value="prestamo">Préstamo (parcialidades)</option>
+      <option value="adelanto">Adelanto (se descuenta completo)</option>
+    </select></div>
+    <div class="form-row">
+      <div class="form-group"><label>Monto Total ($)</label><input type="number" id="prestMonto" step="0.01"></div>
+      <div class="form-group" id="prestParcGroup"><label>Parcialidades</label><input type="number" id="prestParc" value="1" min="1"></div>
+    </div>
+    <div class="form-group"><label>Notas</label><textarea id="prestNotas"></textarea></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" data-action="closeModal">Cancelar</button>
+      <button class="btn btn-primary" data-action="savePrestamo">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modalDeduccion">
+  <div class="modal-backdrop" data-action="closeModal"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Nueva Deducción</h3>
+      <button class="modal-close" data-action="closeModal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="form-group"><label>Empleado</label><select id="dedEmp"></select></div>
+    <div class="form-row">
+      <div class="form-group"><label>Tipo</label><select id="dedTipo">
+        <option value="comida">Comida</option>
+        <option value="otro">Otro</option>
+      </select></div>
+      <div class="form-group"><label>Monto ($)</label><input type="number" id="dedMonto" step="0.01"></div>
+    </div>
+    <div class="form-group"><label>Descripción</label><input type="text" id="dedDesc" autocomplete="off"></div>
+    <div class="form-group"><label>Periodo de Nómina</label><input type="text" id="dedPeriodo" placeholder="yyyy-mm-dd_yyyy-mm-dd" autocomplete="off"></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" data-action="closeModal">Cancelar</button>
+      <button class="btn btn-primary" data-action="saveDeduccion">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modalEditAtt">
+  <div class="modal-backdrop" data-action="closeModal"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Editar Asistencia</h3>
+      <button class="modal-close" data-action="closeModal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <input type="hidden" id="editAttId">
+    <div class="form-group"><label>Empleado</label><input type="text" id="editAttNombre" readonly></div>
+    <div class="form-group"><label>Fecha</label><input type="text" id="editAttFecha" readonly></div>
+    <div class="form-row">
+      <div class="form-group"><label>Entrada</label><input type="time" id="editAttEntrada1"></div>
+      <div class="form-group"><label>Salida</label><input type="time" id="editAttSalida1"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Entrada 2</label><input type="time" id="editAttEntrada2"></div>
+      <div class="form-group"><label>Salida 2</label><input type="time" id="editAttSalida2"></div>
+    </div>
+    <div class="form-group"><label>Incidencia</label><select id="editAttIncidencia">
+      <option value="normal">Normal</option>
+      <option value="retardo">Retardo</option>
+      <option value="falta_justificada">Falta justificada</option>
+      <option value="falta_injustificada">Falta injustificada</option>
+    </select></div>
+    <div class="form-group"><label>Notas</label><textarea id="editAttNotas"></textarea></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" data-action="closeModal">Cancelar</button>
+      <button class="btn btn-primary" data-action="saveAsistencia">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modalEditSucursal">
+  <div class="modal-backdrop" data-action="closeModal"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="editSucTitle">Editar Sucursal</h3>
+      <button class="modal-close" data-action="closeModal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <input type="hidden" id="editSucId">
+    <div style="font-size:.8rem;color:var(--text2);margin-bottom:16px">Configurar turnos y políticas de asistencia</div>
+    <div class="card-title" style="margin-bottom:12px;font-size:.85rem">Turno Matutino</div>
+    <div class="form-row">
+      <div class="form-group"><label>Entrada</label><input type="time" id="editSucMatEntrada"></div>
+      <div class="form-group"><label>Salida</label><input type="time" id="editSucMatSalida"></div>
+    </div>
+    <div class="card-title" style="margin-bottom:12px;font-size:.85rem;margin-top:16px">Turno Vespertino</div>
+    <div class="form-row">
+      <div class="form-group"><label>Entrada</label><input type="time" id="editSucVesEntrada"></div>
+      <div class="form-group"><label>Salida</label><input type="time" id="editSucVesSalida"></div>
+    </div>
+    <div class="card-title" style="margin-bottom:12px;font-size:.85rem;margin-top:16px">Turno Quebrado Bloque 1</div>
+    <div class="form-row">
+      <div class="form-group"><label>Entrada</label><input type="time" id="editSucQuebEntrada1"></div>
+      <div class="form-group"><label>Salida</label><input type="time" id="editSucQuebSalida1"></div>
+    </div>
+    <div class="card-title" style="margin-bottom:12px;font-size:.85rem;margin-top:16px">Turno Quebrado Bloque 2</div>
+    <div class="form-row">
+      <div class="form-group"><label>Entrada</label><input type="time" id="editSucQuebEntrada2"></div>
+      <div class="form-group"><label>Salida</label><input type="time" id="editSucQuebSalida2"></div>
+    </div>
+    <div class="card-title" style="margin-bottom:12px;font-size:.85rem;margin-top:16px">Políticas</div>
+    <div class="form-row">
+      <div class="form-group"><label>Tolerancia (min)</label><input type="number" id="editSucTolerancia" min="0" step="1"></div>
+      <div class="form-group"><label>Retardo máximo (min)</label><input type="number" id="editSucRetardoMax" min="0" step="1"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Descuento retardo ($)</label><input type="number" id="editSucDescRetardo" min="0" step="0.01"></div>
+      <div class="form-group"><label>Horas jornada</label><input type="number" id="editSucHorasJornada" min="0" step="0.5"></div>
+    </div>
+    <div class="btn-row" style="margin-top:20px">
+      <button class="btn btn-secondary" data-action="closeModal">Cancelar</button>
+      <button class="btn btn-primary" data-action="saveSucursal">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay">
+  <div class="spinner" id="overlaySpinner"></div>
+  <h2 id="overlayTitle">Cargando...</h2>
+  <p id="overlayMsg"></p>
+</div>
+
+<script>
+// ============================================================
+// CONFIG & STATE
+// ============================================================
+const DEFAULT_API = 'https://script.google.com/macros/s/AKfycby--RTxbNBz6l7HPfmUo0n5Q-VeFu2BvYuZIY0N3O4xIYY6pzzUGRLrw3AiQIEYM4eu/exec';
+
+const S = {
+  apiUrl: localStorage.getItem('nm_apiUrl') || DEFAULT_API,
+  sucursal: localStorage.getItem('nm_sucursal') || '',
+  loggedIn: localStorage.getItem('nm_loggedIn') === 'true',
+  usuario: localStorage.getItem('nm_usuario') || '',
+  sucursales: JSON.parse(localStorage.getItem('nm_sucursales') || '[]'),
+  empleados: JSON.parse(localStorage.getItem('nm_empleados') || '[]'),
+  currentScreen: 'screenDashboard',
+  nominaActual: []
+};
+
+function saveState() {
+  localStorage.setItem('nm_apiUrl', S.apiUrl);
+  // API key eliminada por seguridad
+  localStorage.setItem('nm_sucursal', S.sucursal);
+  localStorage.setItem('nm_loggedIn', String(S.loggedIn));
+  localStorage.setItem('nm_usuario', S.usuario);
+  localStorage.setItem('nm_sucursales', JSON.stringify(S.sucursales));
+  localStorage.setItem('nm_empleados', JSON.stringify(S.empleados));
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function $(sel) { return document.querySelector(sel); }
+function $$(sel) { return document.querySelectorAll(sel); }
+
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function getLastTuesday() {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = (day >= 2) ? day - 2 : day + 5;
+  d.setDate(d.getDate() - diff);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function getNextSunday(tuesStr) {
+  const d = new Date(tuesStr + 'T12:00:00');
+  d.setDate(d.getDate() + 5);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function formatMoney(n) { return '$' + Number(n||0).toFixed(2); }
+
+function getInitials(name) {
+  return (name||'?').split(' ').map(function(w){return w[0]||'';}).join('').toUpperCase().substring(0,2);
+}
+
+// ============================================================
+// SCREENS & NAV
+// ============================================================
+function showScreen(id) {
+  $$('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  S.currentScreen = id;
+  closeNav();
+
+  // Load data for screen
+  if (id === 'screenDashboard') loadDashboard();
+  else if (id === 'screenEmpleados') loadEmpleados();
+  else if (id === 'screenAsistencia') loadAsistencia();
+  else if (id === 'screenNomina') loadNominaScreen();
+  else if (id === 'screenPrestamos') loadPrestamos();
+  else if (id === 'screenDeducciones') loadDeducciones();
+  else if (id === 'screenAjustes') loadAjustes();
+}
+
+function openNav() {
+  $('#navDrawer').classList.add('open');
+  $('#navBackdrop').classList.add('open');
+}
+function closeNav() {
+  $('#navDrawer').classList.remove('open');
+  $('#navBackdrop').classList.remove('open');
+}
+
+function showOverlay(title, msg) {
+  $('#overlayTitle').textContent = title || 'Cargando...';
+  $('#overlayMsg').textContent = msg || '';
+  $('#overlaySpinner').style.display = '';
+  $('#overlay').classList.add('active');
+}
+function hideOverlay() { $('#overlay').classList.remove('active'); }
+
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeAllModals() { $$('.modal').forEach(function(m){ m.classList.remove('active'); }); }
+
+// ============================================================
+// API
+// ============================================================
+function api(action, data) {
+  var payload = Object.assign({}, data || {}, { action: action });
+  return fetch(S.apiUrl, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(json) {
+    if (json.success) return json;
+    throw new Error(json.error || 'Error');
+  });
+}
+
+// ============================================================
+// SUCURSAL SELECTOR
+// ============================================================
+function renderSucursalSelectors() {
+  var html = '';
+  S.sucursales.forEach(function(s) {
+    html += '<button class="suc-btn' + (s.nombre === S.sucursal ? ' active' : '') + '" data-suc="' + s.nombre + '">' + s.nombre + '</button>';
+  });
+  ['sucSelector','sucSelectorEmp','sucSelectorAtt','sucSelectorNom','sucSelectorRep'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  });
+}
+
+// ============================================================
+// LOGIN
+// ============================================================
+function doLogin() {
+  var user = $('#loginUser').value.trim();
+  var pin = $('#loginPin').value.trim();
+  if (!user || !pin) { $('#loginError').textContent = 'Completa los campos'; return; }
+
+  showOverlay('Verificando...', '');
+  api('loginAdmin', { usuario: user, pin: pin })
+    .then(function(res) {
+      S.loggedIn = true;
+      S.usuario = user;
+      saveState();
+      hideOverlay();
+      initApp();
+    })
+    .catch(function(err) {
+      hideOverlay();
+      $('#loginError').textContent = err.message || 'Error de conexión';
+    });
+}
+
+function doLogout() {
+  S.loggedIn = false;
+  S.usuario = '';
+  saveState();
+  showScreen('screenLogin');
+  document.getElementById('screenLogin').classList.add('active');
+}
+
+// ============================================================
+// INIT APP
+// ============================================================
+function initApp() {
+  showOverlay('Cargando datos...', '');
+
+  api('getSucursales')
+    .then(function(res) {
+      S.sucursales = res.data || [];
+      if (!S.sucursal && S.sucursales.length > 0) S.sucursal = S.sucursales[0].nombre;
+      saveState();
+      renderSucursalSelectors();
+      return api('getEmpleados', { sucursal: S.sucursal, estatus: 'Activo' });
+    })
+    .then(function(res) {
+      S.empleados = res.data || [];
+      saveState();
+      hideOverlay();
+      showScreen('screenDashboard');
+    })
+    .catch(function() {
+      hideOverlay();
+      renderSucursalSelectors();
+      showScreen('screenDashboard');
+    });
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function loadDashboard() {
+  api('getAsistenciaHoy', { sucursal: S.sucursal })
+    .then(function(res) {
+      var registros = res.data || [];
+      var presentes = registros.filter(function(r){ return r.entrada1; }).length;
+      var retardos = registros.filter(function(r){ return String(r.tipoIncidencia) === 'retardo'; }).length;
+      var totalEmp = S.empleados.length;
+      var faltas = totalEmp - presentes;
+
+      $('#dashStats').innerHTML =
+        '<div class="stat-card"><div class="stat-value">' + presentes + '</div><div class="stat-label">Presentes</div></div>' +
+        '<div class="stat-card"><div class="stat-value">' + totalEmp + '</div><div class="stat-label">Total Empleados</div></div>' +
+        '<div class="stat-card"><div class="stat-value yellow">' + retardos + '</div><div class="stat-label">Retardos</div></div>' +
+        '<div class="stat-card"><div class="stat-value red">' + Math.max(0, faltas) + '</div><div class="stat-label">Sin registro</div></div>';
+
+      var listHtml = '';
+      if (registros.length === 0) {
+        listHtml = '<div class="empty-state"><p>Sin registros hoy</p></div>';
+      } else {
+        registros.forEach(function(r) {
+          var badge = '';
+          if (String(r.tipoIncidencia) === 'retardo') badge = '<span class="card-badge badge-yellow">Retardo</span>';
+          else if (String(r.tipoIncidencia).indexOf('falta') > -1) badge = '<span class="card-badge badge-red">Falta</span>';
+          else badge = '<span class="card-badge badge-green">OK</span>';
+
+          listHtml += '<div class="list-item">' +
+            '<div class="avatar">' + getInitials(r.nombre) + '</div>' +
+            '<div class="info"><h4>' + r.nombre + '</h4><p>' + (r.entrada1||'--') + ' → ' + (r.salida1||'--') + '</p></div>' +
+            badge + '</div>';
+        });
+      }
+      $('#dashTodayList').innerHTML = listHtml;
+    })
+    .catch(function() {
+      $('#dashStats').innerHTML = '<div class="empty-state"><p>Error cargando datos</p></div>';
+    });
+}
+
+// ============================================================
+// EMPLEADOS
+// ============================================================
+function loadEmpleados() {
+  showOverlay('Cargando empleados...','');
+  api('getEmpleados', { sucursal: S.sucursal })
+    .then(function(res) {
+      S.empleados = res.data || [];
+      saveState();
+      hideOverlay();
+      renderEmpleados();
+    })
+    .catch(function() { hideOverlay(); renderEmpleados(); });
+}
+
+function renderEmpleados(filter) {
+  var term = (filter || '').toLowerCase();
+  var filtered = S.empleados.filter(function(e) {
+    return String(e.estatus) !== 'Inactivo' && (!term ||
+      e.nombre.toLowerCase().indexOf(term) > -1 ||
+      (e.puesto||'').toLowerCase().indexOf(term) > -1);
+  });
+
+  if (filtered.length === 0) {
+    $('#empList').innerHTML = '<div class="empty-state"><p>No hay empleados</p></div>';
+    return;
+  }
+
+  var html = '';
+  filtered.forEach(function(e) {
+    html += '<div class="list-item" data-action="editEmpleado" data-emp-id="' + e.id + '">' +
+      '<div class="avatar">' + getInitials(e.nombre) + '</div>' +
+      '<div class="info"><h4>' + e.nombre + '</h4><p>' + (e.puesto||'') + ' · ' + (e.turno||'') + '</p></div>' +
+      '<div class="amount">' + formatMoney(e.salarioSemanal) + '</div></div>';
+  });
+  $('#empList').innerHTML = html;
+}
+
+function openAddEmpleado() {
+  $('#modalEmpTitle').textContent = 'Nuevo Empleado';
+  $('#empEditId').value = '';
+  $('#empNombre').value = '';
+  $('#empTelefono').value = '';
+  $('#empEmail').value = '';
+  $('#empPuesto').value = '';
+  $('#empTurno').value = '';
+  $('#empSalario').value = '';
+  $('#empPin').value = '';
+  $('#empFechaIngreso').value = todayStr();
+  $('#empEditActions').style.display = 'none';
+  populateEmpSucursal();
+  openModal('modalEmpleado');
+}
+
+function editEmpleado(id) {
+  var emp = S.empleados.find(function(e) { return String(e.id) === String(id); });
+  if (!emp) return;
+
+  $('#modalEmpTitle').textContent = 'Editar Empleado';
+  $('#empEditId').value = emp.id;
+  $('#empNombre').value = emp.nombre || '';
+  $('#empTelefono').value = emp.telefono || '';
+  $('#empEmail').value = emp.email || '';
+  $('#empSalario').value = emp.salarioSemanal || '';
+  $('#empPin').value = emp.pin || '';
+  $('#empFechaIngreso').value = emp.fechaIngreso || '';
+  $('#empEditActions').style.display = '';
+
+  populateEmpSucursal();
+
+  // Pre-select puesto and turno correctly
+  setTimeout(function() {
+    var puestoSelect = $('#empPuesto');
+    for (var i = 0; i < puestoSelect.options.length; i++) {
+      if (puestoSelect.options[i].value === emp.puesto || puestoSelect.options[i].text === emp.puesto) {
+        puestoSelect.selectedIndex = i; break;
+      }
+    }
+    var turnoSelect = $('#empTurno');
+    for (var j = 0; j < turnoSelect.options.length; j++) {
+      if (turnoSelect.options[j].value === emp.turno) {
+        turnoSelect.selectedIndex = j; break;
+      }
+    }
+    var sucSelect = $('#empSucursal');
+    for (var k = 0; k < sucSelect.options.length; k++) {
+      if (sucSelect.options[k].value === emp.sucursal) {
+        sucSelect.selectedIndex = k; break;
+      }
+    }
+  }, 50);
+
+  openModal('modalEmpleado');
+}
+
+function populateEmpSucursal() {
+  var sel = $('#empSucursal');
+  sel.innerHTML = '';
+  S.sucursales.forEach(function(s) {
+    var opt = document.createElement('option');
+    opt.value = s.nombre;
+    opt.textContent = s.nombre;
+    if (s.nombre === S.sucursal) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function saveEmpleado() {
+  var id = $('#empEditId').value;
+  var data = {
+    nombre: $('#empNombre').value.trim(),
+    telefono: $('#empTelefono').value.trim(),
+    email: $('#empEmail').value.trim(),
+    puesto: $('#empPuesto').value,
+    turno: $('#empTurno').value,
+    sucursal: $('#empSucursal').value,
+    salarioSemanal: Number($('#empSalario').value) || 0,
+    pin: String($('#empPin').value).padStart(6, '0'),
+    fechaIngreso: $('#empFechaIngreso').value
+  };
+
+  if (!data.nombre) { alert('El nombre es requerido'); return; }
+  if (data.pin.length !== 6) { alert('El PIN debe ser de 6 dígitos'); return; }
+
+  showOverlay(id ? 'Actualizando...' : 'Guardando...', '');
+  var action = id ? 'updateEmpleado' : 'addEmpleado';
+  if (id) data.id = id;
+
+  api(action, data)
+    .then(function() {
+      hideOverlay();
+      closeAllModals();
+      loadEmpleados();
+    })
+    .catch(function(err) {
+      hideOverlay();
+      alert(err.message);
+    });
+}
+
+function deleteEmpleado() {
+  var id = $('#empEditId').value;
+  if (!id || !confirm('¿Desactivar este empleado?')) return;
+
+  showOverlay('Desactivando...','');
+  api('deleteEmpleado', { id: id })
+    .then(function() { hideOverlay(); closeAllModals(); loadEmpleados(); })
+    .catch(function(err) { hideOverlay(); alert(err.message); });
+}
+
+// ============================================================
+// ASISTENCIA
+// ============================================================
+function loadAsistencia() {
+  var fecha = $('#attDateFilter').value || todayStr();
+  showOverlay('Cargando asistencia...','');
+  api('getAsistencia', { sucursal: S.sucursal, fecha: fecha, incluirFotos: true })
+    .then(function(res) {
+      hideOverlay();
+      renderAsistencia(res.data || []);
+    })
+    .catch(function(err) {
+      hideOverlay();
+      console.error('Error cargando asistencia:', err);
+      $('#attList').innerHTML = '<div class="empty-state"><p>Error: ' + (err.message||'sin conexión') + '</p></div>';
+    });
+}
+
+function renderAsistencia(registros) {
+  if (registros.length === 0) {
+    $('#attList').innerHTML = '<div class="empty-state"><p>Sin registros para esta fecha</p></div>';
+    return;
+  }
+
+  var html = '';
+  registros.forEach(function(r) {
+    // FOTO ENTRADA — detectar base64 (data:image/jpeg o string larga)
+    var fotoEntradaHtml = '';
+    var fe = r.fotoEntrada || '';
+    if (fe && fe !== 'SI') {
+      // Si empieza con data: es base64 completo, si no, intentar como data URI
+      var src = fe.indexOf('data:') === 0 ? fe : (fe.length > 100 ? 'data:image/jpeg;base64,' + fe : '');
+      if (src) {
+        fotoEntradaHtml = '<img src="' + src + '" alt="Entrada" style="width:100%;height:100%;object-fit:cover">';
+      } else {
+        fotoEntradaHtml = getInitials(r.nombre);
+      }
+    } else {
+      fotoEntradaHtml = getInitials(r.nombre);
+    }
+
+    // FOTO SALIDA
+    var fotoSalidaHtml = '';
+    var fs = r.fotoSalida || '';
+    if (fs && fs !== 'SI') {
+      var srcS = fs.indexOf('data:') === 0 ? fs : (fs.length > 100 ? 'data:image/jpeg;base64,' + fs : '');
+      if (srcS) {
+        fotoSalidaHtml = '<img src="' + srcS + '" alt="Salida" style="width:100%;height:100%;object-fit:cover">';
+      }
+    }
+
+    var badge = '';
+    var inc = String(r.tipoIncidencia || '');
+    if (inc === 'retardo') badge = '<span class="card-badge badge-yellow">Retardo ' + (r.retardoMin||0) + 'min</span>';
+    else if (inc.indexOf('falta') > -1) badge = '<span class="card-badge badge-red">' + inc.replace(/_/g,' ') + '</span>';
+    else if (inc === 'normal') badge = '<span class="card-badge badge-green">Puntual</span>';
+    else if (inc) badge = '<span class="card-badge badge-blue">' + inc + '</span>';
+
+    var descuento = Number(r.descuentoRetardo) || 0;
+
+    html += '<div class="att-card" data-action="editAsistencia" data-att-id="' + (r.id||'') + '">' +
+      '<div class="att-card-header">' +
+        '<div class="att-photo">' + fotoEntradaHtml + '</div>' +
+        '<div class="att-info"><h4>' + (r.nombre||'Sin nombre') + '</h4><p>' + (r.turno||'') + ' · ' + (r.sucursal||'') + '</p></div>' +
+        (fotoSalidaHtml ? '<div class="att-photo" style="border-color:var(--danger)">' + fotoSalidaHtml + '</div>' : '') +
+      '</div>' +
+      '<div class="att-times">' +
+        '<div class="att-time"><div class="att-label">Entrada</div><div class="att-value">' + (r.entrada1||'--') + '</div></div>' +
+        '<div class="att-time"><div class="att-label">Salida</div><div class="att-value">' + (r.salida1||'--') + '</div></div>' +
+        (r.entrada2 ? '<div class="att-time"><div class="att-label">Entrada 2</div><div class="att-value">' + r.entrada2 + '</div></div>' : '') +
+        (r.salida2 ? '<div class="att-time"><div class="att-label">Salida 2</div><div class="att-value">' + r.salida2 + '</div></div>' : '') +
+      '</div>' +
+      '<div class="att-badges">' + badge +
+        (descuento > 0 ? '<span class="card-badge badge-red">-' + formatMoney(descuento) + '</span>' : '') +
+        (!r.salida1 && r.entrada1 ? '<span class="card-badge badge-blue">Sin salida</span>' : '') +
+      '</div></div>';
+  });
+  $('#attList').innerHTML = html;
+}
+
+function editAsistencia(id) {
+  var fecha = $('#attDateFilter').value || todayStr();
+  api('getAsistencia', { sucursal: S.sucursal, fecha: fecha, incluirFotos: false })
+    .then(function(res) {
+      var registros = res.data || [];
+      var record = registros.find(function(r) { return String(r.id) === String(id); });
+      if (!record) { alert('Registro no encontrado'); return; }
+
+      $('#editAttId').value = record.id;
+      $('#editAttNombre').value = record.nombre || '';
+      $('#editAttFecha').value = fecha;
+      $('#editAttEntrada1').value = (record.entrada1 || '').substring(0, 5);
+      $('#editAttSalida1').value = (record.salida1 || '').substring(0, 5);
+      $('#editAttEntrada2').value = (record.entrada2 || '').substring(0, 5);
+      $('#editAttSalida2').value = (record.salida2 || '').substring(0, 5);
+      $('#editAttIncidencia').value = record.tipoIncidencia || 'normal';
+      $('#editAttNotas').value = record.notas || '';
+
+      openModal('modalEditAtt');
+    })
+    .catch(function(err) { alert('Error cargando registro: ' + err.message); });
+}
+
+function saveAsistencia() {
+  var id = $('#editAttId').value;
+  var data = {
+    id: id,
+    entrada1: $('#editAttEntrada1').value || null,
+    salida1: $('#editAttSalida1').value || null,
+    entrada2: $('#editAttEntrada2').value || null,
+    salida2: $('#editAttSalida2').value || null,
+    tipoIncidencia: $('#editAttIncidencia').value,
+    notas: $('#editAttNotas').value
+  };
+
+  showOverlay('Guardando...', '');
+  api('updateAsistencia', data)
+    .then(function() {
+      hideOverlay();
+      closeAllModals();
+      loadAsistencia();
+    })
+    .catch(function(err) {
+      hideOverlay();
+      alert('Error: ' + err.message);
+    });
+}
+
+// ============================================================
+// NÓMINA
+// ============================================================
+function loadNominaScreen() {
+  var tue = getLastTuesday();
+  var sun = getNextSunday(tue);
+  $('#nomInicio').value = tue;
+  $('#nomFin').value = sun;
+  loadHistorialNomina();
+}
+
+function calcularNomina() {
+  var inicio = $('#nomInicio').value;
+  var fin = $('#nomFin').value;
+  if (!inicio || !fin) { alert('Selecciona el periodo'); return; }
+
+  showOverlay('Calculando nómina...', 'Procesando empleados de ' + S.sucursal);
+  api('calcularNomina', { periodoInicio: inicio, periodoFin: fin, sucursal: S.sucursal })
+    .then(function(res) {
+      hideOverlay();
+      S.nominaActual = res.data || [];
+      renderNominaResults();
+    })
+    .catch(function(err) { hideOverlay(); alert(err.message); });
+}
+
+function renderNominaResults() {
+  if (S.nominaActual.length === 0) {
+    $('#nomResults').innerHTML = '<div class="empty-state"><p>Sin resultados</p></div>';
+    return;
+  }
+
+  var totalBruto = 0, totalNeto = 0;
+  var html = '';
+
+  S.nominaActual.forEach(function(n) {
+    totalBruto += Number(n.salarioSemanal) || 0;
+    totalNeto += Number(n.salarioNeto) || 0;
+    var dedTotal = (Number(n.salarioSemanal)||0) - (Number(n.salarioNeto)||0);
+
+    html += '<div class="card" style="cursor:pointer" data-action="verDetalleNomina" data-emp-id="' + n.empleadoId + '">' +
+      '<div class="card-header">' +
+        '<div><div class="card-title">' + n.nombre + '</div>' +
+        '<div class="card-subtitle">' + n.diasTrabajados + ' días · ' + n.totalRetardos + ' retardos</div></div>' +
+        '<div class="amount">' + formatMoney(n.salarioNeto) + '</div>' +
+      '</div>' +
+      (dedTotal > 0 ? '<div style="font-size:.7rem;color:var(--danger)">Deducciones: ' + formatMoney(dedTotal) + '</div>' : '') +
+      '<span class="card-badge ' + (n.estatus==='cerrada'?'badge-red':'badge-green') + '">' + n.estatus + '</span>' +
+    '</div>';
+  });
+
+  var summary = '<div class="stats-grid" style="margin-bottom:16px">' +
+    '<div class="stat-card"><div class="stat-value">' + formatMoney(totalBruto) + '</div><div class="stat-label">Total Bruto</div></div>' +
+    '<div class="stat-card"><div class="stat-value">' + formatMoney(totalNeto) + '</div><div class="stat-label">Total Neto</div></div>' +
+  '</div>';
+
+  $('#nomResults').innerHTML = summary + html;
+}
+
+function cerrarNomina() {
+  var inicio = $('#nomInicio').value;
+  var fin = $('#nomFin').value;
+  if (!inicio || !fin) { alert('Selecciona el periodo'); return; }
+  if (!confirm('¿Cerrar la nómina del ' + inicio + ' al ' + fin + '?\nEsta acción no se puede deshacer.')) return;
+
+  showOverlay('Cerrando nómina...','');
+  api('cerrarNomina', { periodoInicio: inicio, periodoFin: fin, sucursal: S.sucursal })
+    .then(function(res) {
+      hideOverlay();
+      alert(res.message);
+      calcularNomina();
+      loadHistorialNomina();
+    })
+    .catch(function(err) { hideOverlay(); alert(err.message); });
+}
+
+function loadHistorialNomina() {
+  api('getHistorialNomina', { sucursal: S.sucursal })
+    .then(function(res) {
+      var periodos = res.data || [];
+      if (periodos.length === 0) {
+        $('#nomHistorial').innerHTML = '<div class="empty-state"><p>Sin historial</p></div>';
+        return;
+      }
+      var html = '';
+      periodos.reverse().forEach(function(p) {
+        html += '<div class="list-item">' +
+          '<div class="info"><h4>' + p.periodoInicio + ' → ' + p.periodoFin + '</h4>' +
+          '<p>' + p.totalEmpleados + ' empleados</p></div>' +
+          '<div><div class="amount">' + formatMoney(p.totalNeto) + '</div>' +
+          '<span class="card-badge ' + (p.estatus==='cerrada'?'badge-red':'badge-green') + '" style="font-size:.6rem">' + p.estatus + '</span></div></div>';
+      });
+      $('#nomHistorial').innerHTML = html;
+    })
+    .catch(function() {});
+}
+
+// ============================================================
+// PRÉSTAMOS
+// ============================================================
+function loadPrestamos() {
+  var tab = document.querySelector('#prestamosTabs .tab.active');
+  var estatus = tab && tab.getAttribute('data-tab') === 'historial' ? 'pagado' : 'activo';
+
+  showOverlay('Cargando...','');
+  api('getPrestamos', { estatus: estatus })
+    .then(function(res) {
+      hideOverlay();
+      renderPrestamos(res.data || []);
+    })
+    .catch(function() { hideOverlay(); });
+}
+
+function renderPrestamos(list) {
+  if (list.length === 0) {
+    $('#prestamosList').innerHTML = '<div class="empty-state"><p>Sin registros</p></div>';
+    return;
+  }
+
+  var html = '';
+  list.forEach(function(p) {
+    var badge = p.tipo === 'adelanto' ? '<span class="card-badge badge-yellow">Adelanto</span>' : '<span class="card-badge badge-blue">Préstamo</span>';
+    html += '<div class="card">' +
+      '<div class="card-header">' +
+        '<div><div class="card-title">' + p.nombre + '</div>' +
+        '<div class="card-subtitle">' + p.fechaCreacion + ' · ' + badge + '</div></div>' +
+        '<div class="amount' + (p.estatus==='activo'?' red':'') + '">' + formatMoney(p.saldoPendiente) + '</div>' +
+      '</div>' +
+      '<div style="font-size:.75rem;color:var(--text2)">Total: ' + formatMoney(p.montoTotal) + ' · Pagado: ' + formatMoney(p.montoPagado) + '</div>' +
+      (p.tipo === 'prestamo' ? '<div style="font-size:.7rem;color:var(--text3)">Parcialidad: ' + formatMoney(p.montoPorParcialidad) + ' × ' + p.parcialidades + '</div>' : '') +
+    '</div>';
+  });
+  $('#prestamosList').innerHTML = html;
+}
+
+function openAddPrestamo() {
+  populateEmpSelect('prestEmp');
+  $('#prestTipo').value = 'prestamo';
+  $('#prestMonto').value = '';
+  $('#prestParc').value = '1';
+  $('#prestNotas').value = '';
+  $('#prestParcGroup').style.display = '';
+  openModal('modalPrestamo');
+}
+
+function savePrestamo() {
+  var empId = $('#prestEmp').value;
+  var emp = S.empleados.find(function(e){ return String(e.id)===empId; });
+  if (!emp) { alert('Selecciona empleado'); return; }
+
+  var data = {
+    empleadoId: empId,
+    nombre: emp.nombre,
+    tipo: $('#prestTipo').value,
+    montoTotal: Number($('#prestMonto').value) || 0,
+    parcialidades: $('#prestTipo').value === 'adelanto' ? 1 : (Number($('#prestParc').value) || 1),
+    notas: $('#prestNotas').value.trim()
+  };
+
+  if (data.montoTotal <= 0) { alert('Ingresa un monto'); return; }
+
+  showOverlay('Guardando...','');
+  api('addPrestamo', data)
+    .then(function() { hideOverlay(); closeAllModals(); loadPrestamos(); })
+    .catch(function(err) { hideOverlay(); alert(err.message); });
+}
+
+// ============================================================
+// DEDUCCIONES
+// ============================================================
+function loadDeducciones() {
+  var tipo = $('#dedTipoFilter').value;
+  showOverlay('Cargando...','');
+  api('getDeducciones', tipo ? { tipo: tipo } : {})
+    .then(function(res) {
+      hideOverlay();
+      renderDeducciones(res.data || []);
+    })
+    .catch(function() { hideOverlay(); });
+}
+
+function renderDeducciones(list) {
+  if (list.length === 0) {
+    $('#dedList').innerHTML = '<div class="empty-state"><p>Sin deducciones</p></div>';
+    return;
+  }
+
+  var html = '';
+  list.forEach(function(d) {
+    html += '<div class="list-item">' +
+      '<div class="info"><h4>' + d.nombre + '</h4><p>' + d.tipo + ' · ' + d.fecha + (d.descripcion ? ' · ' + d.descripcion : '') + '</p></div>' +
+      '<div class="amount red">-' + formatMoney(d.monto) + '</div></div>';
+  });
+  $('#dedList').innerHTML = html;
+}
+
+function openAddDeduccion() {
+  populateEmpSelect('dedEmp');
+  $('#dedTipo').value = 'comida';
+  $('#dedMonto').value = '';
+  $('#dedDesc').value = '';
+  var tue = getLastTuesday();
+  $('#dedPeriodo').value = tue + '_' + getNextSunday(tue);
+  openModal('modalDeduccion');
+}
+
+function saveDeduccion() {
+  var empId = $('#dedEmp').value;
+  var emp = S.empleados.find(function(e){ return String(e.id)===empId; });
+  if (!emp) { alert('Selecciona empleado'); return; }
+
+  var data = {
+    empleadoId: empId,
+    nombre: emp.nombre,
+    tipo: $('#dedTipo').value,
+    monto: Number($('#dedMonto').value) || 0,
+    descripcion: $('#dedDesc').value.trim(),
+    periodoNomina: $('#dedPeriodo').value.trim()
+  };
+
+  if (data.monto <= 0) { alert('Ingresa un monto'); return; }
+
+  showOverlay('Guardando...','');
+  api('addDeduccion', data)
+    .then(function() { hideOverlay(); closeAllModals(); loadDeducciones(); })
+    .catch(function(err) { hideOverlay(); alert(err.message); });
+}
+
+// ============================================================
+// AJUSTES
+// ============================================================
+function loadAjustes() {
+  $('#settingsApiUrl').value = S.apiUrl;
+
+  var html = '';
+  S.sucursales.forEach(function(s) {
+    html += '<div class="list-item" data-action="editSucursal" data-suc-id="' + (s.nombre||'') + '" style="cursor:pointer"><div class="info"><h4>' + s.nombre + '</h4><p style="font-size:.7rem;color:var(--text3)">Tocar para editar turnos y políticas</p></div></div>';
+  });
+  $('#settingsSucursalList').innerHTML = html || '<p style="font-size:.8rem;color:var(--text3)">Sin sucursales</p>';
+}
+
+function editSucursal(nombre) {
+  var sucursal = S.sucursales.find(function(s) { return s.nombre === nombre; });
+  if (!sucursal) { alert('Sucursal no encontrada'); return; }
+
+  $('#editSucId').value = nombre;
+  $('#editSucTitle').textContent = 'Editar - ' + nombre;
+
+  var cfg = sucursal.config || {};
+  var turnos = cfg.turnos || {};
+  var mat = turnos.Matutino || {};
+  var ves = turnos.Vespertino || {};
+  var queb = turnos.Quebrado || {};
+  var q1 = queb.bloque1 || {};
+  var q2 = queb.bloque2 || {};
+
+  $('#editSucMatEntrada').value = mat.entrada || '';
+  $('#editSucMatSalida').value = mat.salida || '';
+  $('#editSucVesEntrada').value = ves.entrada || '';
+  $('#editSucVesSalida').value = ves.salida || '';
+  $('#editSucQuebEntrada1').value = q1.entrada || '';
+  $('#editSucQuebSalida1').value = q1.salida || '';
+  $('#editSucQuebEntrada2').value = q2.entrada || '';
+  $('#editSucQuebSalida2').value = q2.salida || '';
+  $('#editSucTolerancia').value = cfg.toleranciaMin || 0;
+  $('#editSucRetardoMax').value = cfg.retardoMaxMin || 0;
+  $('#editSucDescRetardo').value = cfg.descuentoRetardo || 0;
+  $('#editSucHorasJornada').value = cfg.horasJornada || 8;
+
+  openModal('modalEditSucursal');
+}
+
+function saveSucursal() {
+  var nombre = $('#editSucId').value;
+  var config = {
+    turnos: {
+      Matutino: {
+        entrada: $('#editSucMatEntrada').value || null,
+        salida: $('#editSucMatSalida').value || null
+      },
+      Vespertino: {
+        entrada: $('#editSucVesEntrada').value || null,
+        salida: $('#editSucVesSalida').value || null
+      },
+      Quebrado: {
+        bloque1: {
+          entrada: $('#editSucQuebEntrada1').value || null,
+          salida: $('#editSucQuebSalida1').value || null
+        },
+        bloque2: {
+          entrada: $('#editSucQuebEntrada2').value || null,
+          salida: $('#editSucQuebSalida2').value || null
+        }
+      }
+    },
+    toleranciaMin: Number($('#editSucTolerancia').value) || 0,
+    retardoMaxMin: Number($('#editSucRetardoMax').value) || 0,
+    descuentoRetardo: Number($('#editSucDescRetardo').value) || 0,
+    horasJornada: Number($('#editSucHorasJornada').value) || 8
+  };
+
+  showOverlay('Guardando configuración...', '');
+  api('updateSucursal', { id: nombre, config: config })
+    .then(function(res) {
+      hideOverlay();
+      closeAllModals();
+      // Update local state
+      var sucursal = S.sucursales.find(function(s) { return s.nombre === nombre; });
+      if (sucursal) sucursal.config = config;
+      saveState();
+      loadAjustes();
+    })
+    .catch(function(err) {
+      hideOverlay();
+      alert('Error: ' + err.message);
+    });
+}
+
+// ============================================================
+// REPORTES (simplified — display in nomResults area)
+// ============================================================
+function openReporteAsistencia() {
+  var inicio = prompt('Fecha inicio (yyyy-mm-dd):', getLastTuesday());
+  if (!inicio) return;
+  var fin = prompt('Fecha fin (yyyy-mm-dd):', getNextSunday(inicio));
+  if (!fin) return;
+
+  showOverlay('Generando reporte...','');
+  api('getReporteAsistencia', { sucursal: S.sucursal, fechaInicio: inicio, fechaFin: fin })
+    .then(function(res) {
+      hideOverlay();
+      var data = res.data || [];
+      var html = '<h3 style="font-size:.9rem;margin-bottom:12px;color:var(--accent)">Reporte de Asistencia: ' + inicio + ' al ' + fin + '</h3>';
+
+      data.forEach(function(emp) {
+        html += '<div class="card"><div class="card-title">' + emp.nombre + '</div>' +
+          '<div class="card-subtitle" style="margin-bottom:8px">' + emp.puesto + ' · ' + emp.turno +
+          ' | Asist: ' + emp.totalAsistencias + ' | Ret: ' + emp.totalRetardos + ' | Faltas: ' + emp.totalFaltas + '</div>';
+
+        emp.dias.forEach(function(d) {
+          var color = d.incidencia === 'retardo' ? 'var(--warning)' :
+                      d.incidencia === 'normal' ? 'var(--accent)' :
+                      d.entrada1 ? 'var(--text)' : 'var(--danger)';
+          html += '<div style="display:flex;justify-content:space-between;font-size:.7rem;padding:2px 0;color:' + color + '">' +
+            '<span>' + d.fecha + '</span>' +
+            '<span>' + (d.entrada1||'--') + ' → ' + (d.salida1||'--') +
+            (d.entrada2 ? ' | ' + d.entrada2 + ' → ' + (d.salida2||'--') : '') + '</span></div>';
+        });
+        html += '</div>';
+      });
+
+      showScreen('screenReportes');
+      // show in a temp div
+      var div = document.createElement('div');
+      div.innerHTML = html;
+      div.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;background:var(--bg);z-index:700;overflow-y:auto;padding:16px;padding-bottom:60px';
+      var closeBtn = document.createElement('button');
+      closeBtn.className = 'btn btn-secondary btn-block';
+      closeBtn.textContent = 'Cerrar reporte';
+      closeBtn.addEventListener('click', function() { document.body.removeChild(div); });
+      div.appendChild(closeBtn);
+      document.body.appendChild(div);
+    })
+    .catch(function(err) { hideOverlay(); alert(err.message); });
+}
+
+function openReporteCostoTurnos() {
+  var inicio = prompt('Periodo inicio:', getLastTuesday());
+  if (!inicio) return;
+  var fin = prompt('Periodo fin:', getNextSunday(inicio));
+  if (!fin) return;
+
+  showOverlay('Generando...','');
+  api('getReporteCostoTurnos', { sucursal: S.sucursal, periodoInicio: inicio, periodoFin: fin })
+    .then(function(res) {
+      hideOverlay();
+      var data = res.data || [];
+      var html = '<h3 style="font-size:.9rem;margin-bottom:12px;color:var(--accent)">Costo por Turnos: ' + S.sucursal + '</h3>';
+      data.forEach(function(t) {
+        html += '<div class="card">' +
+          '<div class="card-header"><div class="card-title">' + t.turno + '</div><div class="amount">' + formatMoney(t.costoNeto) + '</div></div>' +
+          '<div style="font-size:.75rem;color:var(--text2)">' + t.empleados + ' empleados · Bruto: ' + formatMoney(t.costoBruto) + ' · Ded: ' + formatMoney(t.deducciones) + '</div></div>';
+      });
+      if (data.length === 0) html += '<div class="empty-state"><p>Sin datos</p></div>';
+
+      var div = document.createElement('div');
+      div.innerHTML = html;
+      div.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;background:var(--bg);z-index:700;overflow-y:auto;padding:16px;padding-bottom:60px';
+      var closeBtn = document.createElement('button');
+      closeBtn.className = 'btn btn-secondary btn-block';
+      closeBtn.textContent = 'Cerrar reporte';
+      closeBtn.addEventListener('click', function() { document.body.removeChild(div); });
+      div.appendChild(closeBtn);
+      document.body.appendChild(div);
+    })
+    .catch(function(err) { hideOverlay(); alert(err.message); });
+}
+
+// ============================================================
+// POPULATE HELPERS
+// ============================================================
+function populateEmpSelect(selectId) {
+  var sel = document.getElementById(selectId);
+  sel.innerHTML = '<option value="">Seleccionar...</option>';
+  S.empleados.forEach(function(e) {
+    if (String(e.estatus) === 'Inactivo') return;
+    var opt = document.createElement('option');
+    opt.value = e.id;
+    opt.textContent = e.nombre;
+    sel.appendChild(opt);
+  });
+}
+
+// ============================================================
+// EVENT DELEGATION
+// ============================================================
+document.addEventListener('click', function(e) {
+  var target = e.target.closest('[data-action]');
+  if (!target) return;
+  var action = target.getAttribute('data-action');
+
+  switch (action) {
+    // Login
+    case 'doLogin': doLogin(); break;
+    case 'doLogout': doLogout(); break;
+
+    // Navigation
+    case 'refreshDashboard': loadDashboard(); break;
+
+    // Empleados
+    case 'openAddEmpleado': openAddEmpleado(); break;
+    case 'editEmpleado': editEmpleado(target.getAttribute('data-emp-id')); break;
+    case 'saveEmpleado': saveEmpleado(); break;
+    case 'deleteEmpleado': deleteEmpleado(); break;
+
+    // Asistencia
+    case 'addAsistenciaManual':
+      alert('Para registro manual, usa el módulo de ajustes de asistencia en el reporte');
+      break;
+    case 'editAsistencia': editAsistencia(target.getAttribute('data-att-id')); break;
+    case 'saveAsistencia': saveAsistencia(); break;
+
+    // Nómina
+    case 'calcularNomina': calcularNomina(); break;
+    case 'cerrarNomina': cerrarNomina(); break;
+
+    // Préstamos
+    case 'openAddPrestamo': openAddPrestamo(); break;
+    case 'savePrestamo': savePrestamo(); break;
+
+    // Deducciones
+    case 'openAddDeduccion': openAddDeduccion(); break;
+    case 'saveDeduccion': saveDeduccion(); break;
+
+    // Reportes
+    case 'openReporteAsistencia': openReporteAsistencia(); break;
+    case 'openReporteNomina': calcularNomina(); showScreen('screenNomina'); break;
+    case 'openReporteCostoTurnos': openReporteCostoTurnos(); break;
+    case 'openReporteEmpleado':
+      var empPick = prompt('ID o nombre del empleado:');
+      if (empPick) alert('Funcionalidad disponible en próxima versión');
+      break;
+
+    // Ajustes
+    case 'editSucursal': editSucursal(target.getAttribute('data-suc-id')); break;
+    case 'saveSucursal': saveSucursal(); break;
+    case 'saveSettings':
+      S.apiUrl = $('#settingsApiUrl').value.trim() || DEFAULT_API;
+      saveState();
+      alert('Configuración guardada');
+      break;
+    case 'initSystem':
+      showOverlay('Inicializando...','');
+      api('initSystem')
+        .then(function(res) { hideOverlay(); alert(res.message); initApp(); })
+        .catch(function(err) { hideOverlay(); alert(err.message); });
+      break;
+    case 'limpiarFotos':
+      showOverlay('Limpiando...','');
+      api('limpiarFotos', { dias: 2 })
+        .then(function(res) { hideOverlay(); alert(res.message); })
+        .catch(function(err) { hideOverlay(); alert(err.message); });
+      break;
+
+    // Modals
+    case 'closeModal': closeAllModals(); break;
+  }
+});
+
+// Nav items
+document.addEventListener('click', function(e) {
+  var navItem = e.target.closest('[data-nav]');
+  if (!navItem) return;
+  showScreen(navItem.getAttribute('data-nav'));
+});
+
+// Sucursal selector
+document.addEventListener('click', function(e) {
+  var sucBtn = e.target.closest('[data-suc]');
+  if (!sucBtn) return;
+  S.sucursal = sucBtn.getAttribute('data-suc');
+  saveState();
+  renderSucursalSelectors();
+
+  // Reload empleados for new sucursal
+  api('getEmpleados', { sucursal: S.sucursal, estatus: 'Activo' })
+    .then(function(res) { S.empleados = res.data || []; saveState(); })
+    .catch(function() {});
+
+  // Reload current screen
+  if (S.currentScreen === 'screenDashboard') loadDashboard();
+  else if (S.currentScreen === 'screenEmpleados') loadEmpleados();
+  else if (S.currentScreen === 'screenAsistencia') loadAsistencia();
+});
+
+// Tabs
+document.addEventListener('click', function(e) {
+  var tab = e.target.closest('.tab');
+  if (!tab) return;
+  tab.parentElement.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  tab.classList.add('active');
+  if (tab.closest('#prestamosTabs')) loadPrestamos();
+});
+
+// Search empleados
+$('#empSearchInput').addEventListener('input', function() { renderEmpleados(this.value); });
+
+// Attendance date filter
+$('#attDateFilter').addEventListener('change', function() { loadAsistencia(); });
+
+// Prestamo tipo toggle parcialidades
+$('#prestTipo').addEventListener('change', function() {
+  $('#prestParcGroup').style.display = this.value === 'adelanto' ? 'none' : '';
+});
+
+// Deduccion filter
+$('#dedTipoFilter').addEventListener('change', function() { loadDeducciones(); });
+
+// Nav drawer
+$('#navHandle').addEventListener('click', openNav);
+$('#navBtn').addEventListener('click', openNav);
+$('#navBackdrop').addEventListener('click', closeNav);
+
+// Swipe up for nav
+(function() {
+  var startY = 0;
+  document.addEventListener('touchstart', function(e) { startY = e.touches[0].clientY; }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    var diff = startY - e.changedTouches[0].clientY;
+    if (diff > 60 && startY > window.innerHeight - 200) openNav();
+  }, { passive: true });
+})();
+
+// Login with Enter key
+$('#loginPin').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+$('#loginUser').addEventListener('keydown', function(e) { if (e.key === 'Enter') $('#loginPin').focus(); });
+
+// Online/offline
+window.addEventListener('online', function() {
+  $('#offlineBadge').classList.remove('show');
+});
+window.addEventListener('offline', function() {
+  $('#offlineBadge').classList.add('show');
+});
+
+// Save on close
+window.addEventListener('beforeunload', function() { saveState(); });
+
+// ============================================================
+// INIT
+// ============================================================
+(function() {
+  if (!$('#attDateFilter').value) $('#attDateFilter').value = todayStr();
+
+  if (S.loggedIn) {
+    initApp();
+  } else {
+    showScreen('screenLogin');
+    document.getElementById('screenLogin').classList.add('active');
+  }
+})();
+</script>
+</body>
+</html>
